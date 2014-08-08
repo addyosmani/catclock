@@ -1,0 +1,16 @@
+
+<polymer-element name="random-cat">
+    <template>
+        <img src="icons/cat_{{randomCat}}.png"/>
+    </template>
+    <script>
+    // Element that gives you a random cat icon
+    Polymer('random-cat',{
+       cats: ['box', 'cart', 'eyes', 'hungry', 'paper', 'rascal', 'sing', 'sleep', 'tied', 'upsidedown', 'walk'],
+       randomCat: '',
+       attached: function(){
+           this.randomCat = this.cats[Math.floor(Math.random() * this.cats.length)];
+       }
+    });
+    </script>
+</polymer-element>

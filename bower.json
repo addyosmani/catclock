@@ -1,0 +1,38 @@
+{
+  "name": "catclock",
+  "version": "0.1.0",
+  "homepage": "https://github.com/addyosmani/catclock",
+  "authors": [
+    "Addy Osmani <addyosmani@gmail.com>"
+  ],
+  "description": "A Polymer & Material themed countdown app",
+  "main": "index.html",
+  "keywords": [
+    "countdown",
+    "counter",
+    "timer",
+    "clock"
+  ],
+  "license": "Apache-2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#~0.3.4",
+    "paper-fab": "Polymer/paper-fab#~0.3.4",
+    "paper-input": "Polymer/paper-input#~0.3.4",
+    "core-icons": "Polymer/core-icons#~0.3.4",
+    "font-roboto": "Polymer/font-roboto#~0.3.4",
+    "core-toolbar": "Polymer/core-toolbar#~0.3.4",
+    "core-animated-pages": "Polymer/core-animated-pages#~0.3.4",
+    "paper-tabs": "Polymer/paper-tabs#~0.3.4",
+    "moment": "~2.8.1",
+    "core-style": "Polymer/core-style#~0.3.4",
+    "moment-timezone": "~0.2.1",
+    "paper-dialog": "Polymer/paper-dialog#~0.3.4"
+  }
+}

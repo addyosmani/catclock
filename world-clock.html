@@ -1,0 +1,362 @@
+<link rel="import" href="components/polymer/polymer.html">
+
+<link rel="import" href="components/paper-fab/paper-fab.html">
+<link rel="import" href="components/paper-input/paper-input.html">
+<link href="components/core-icons/core-icons.html" rel="import">
+<link href="components/core-icons/iconsets/av-icons.html" rel="import">
+<link rel="import" href="components/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="components/core-animated-pages/transitions/slide-from-bottom.html">
+
+<script src='components/moment/min/moment.min.js'></script>
+<script src='components/moment-timezone/moment-timezone.js'></script>
+
+<!--
+A flip clock, timer and countdown made with Polymer
+
+##### Example
+
+    <world-clock></world-clock>
+
+@element world-clock
+@blurb A flip clock, timer and countdown made with Polymer
+@status alpha
+Originally based on http://Granze.github.io/world-clock
+-->
+<polymer-element name="world-clock" attributes="timezone displayMode commandButtons showSeconds startFrom auto">
+
+  <template>
+
+    <style>
+    :host {
+      display: block;
+    }
+
+    :host #clock {
+      font-size: 0;
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      font-weight: bold;
+      margin:0 auto;
+      text-align:center;
+    }
+
+    :host #clock span, :host #clock b {
+      font-size: 40px;
+      font-size: 15.9vw;
+    }
+
+    :host #clock .timezone {
+      font-size: 8vw;
+      color: #F48FB1;
+    }
+
+    :host paper-button {
+      font-size: 20px;
+      margin: 0px;
+      width: auto;
+    }
+
+    :host #configCounter {
+      font-size: 20px;
+      display: block;
+    }
+
+    :host paper-button.colored {
+      color: #4285f4;
+      fill: #4285f4;
+    }
+
+    :host paper-button[raisedButton].colored {
+      background: #4285f4;
+      color: #fff;
+    }
+
+    :host paper-button[raisedButton].colored #ripple,
+    :hsot paper-button[raisedButton].colored::shadow #ripple {
+      color: #2a56c6;
+    }
+
+    :host paper-button[raisedButton].colored #focusBg,
+    :host paper-button[raisedButton].colored::shadow #focusBg {
+      background: #3367d6;
+    }
+    :host paper-fab {
+      background: #EDFE44;
+      position: absolute;
+      bottom: 0px;
+      right: 0;
+      margin: 30px;
+    }
+    :host paper-fab #icon, paper-fab /deep/ #icon {
+      fill: black;
+      color: black;
+    }
+
+    :host .ui-controls {
+      width: 80%;
+      margin: 0 auto;
+    }
+    </style>
+
+    <content>
+
+
+      <div id="clock">
+        <div class="timezone" style="display: {{timezone? 'block': 'none'}}">{{timezone}}</div>
+        <span id="hours0">{{time[0]}}</span><span id="hours1">{{time[1]}}</span>
+        <b>:</b>
+        <span id="minutes0">{{time[2]}}</span><span id="minutes1">{{time[3]}}</span>
+
+        <template if="{{showSeconds}}">
+          <b>:</b>
+          <span id="seconds0">{{time[4]}}</span><span id="seconds1">{{time[5]}}</span>
+        </template>
+      </div>
+
+      <div class="ui-controls">
+        <template if="{{displayMode == 'countdown'}}">
+            <div id="configCounter" layout vertical style="display:{{isEditing? 'block': 'none'}}; margin:0 auto;">
+              <paper-input inputValue="{{counthour}}" validate="^[0-9]*$" error="Input is not a number!" floatingLabel label="Hours"></paper-input>
+              <paper-input inputValue="{{countminute}}" validate="^[0-9]*$" error="Input is not a number!" floatingLabel label="Minutes"></paper-input>
+              <paper-input inputValue="{{countsecond}}" validate="^[0-9]*$" error="Input is not a number!" floatingLabel label="Seconds"></paper-input>
+            </div>
+            <!-- Submitted https://github.com/Polymer/paper-button/issues/18 -->
+            <paper-button raisedButton class="colored" on-click={{editCountdown}} label="{{isEditing? 'Done' : 'Edit'}}"></paper-button>
+        </template>
+
+        <template if="{{commandButtons && displayMode !== 'clock'}}">
+          <paper-fab icon="{{isRunning? 'av:stop' : 'av:play-arrow'}}" on-click="{{startStop}}"></paper-fab>
+          <paper-button raisedButton class="colored" on-click="{{resetCount}}">Reset</paper-button>
+        </template>
+      </div>
+    </content>
+
+    <audio src="audio/meow_alarm.mp3" id="alarm" loop>
+
+  </template>
+
+  <script>
+
+    /*
+      timezones we wish to support must be initially added to the moment.tz
+      object so they can be computed as needed. alternatively, one can manually
+      add the offsets necessary for timezone computation to the createClock
+      method lower down.
+    */
+
+    moment.tz.add([
+        'America/Los_Angeles|PST PDT|80 70|0101|1Lzm0 1zb0 Op0',
+        'America/New_York|EST EDT|50 40|0101|1Lz50 1zb0 Op0'
+    ]);
+
+    Polymer('world-clock', {
+
+      counthour: '00',
+      countminute: '00',
+      countsecond: '00',
+      computed : {
+        countdown: 'counthour + countminute + countsecond'
+      },
+      isEditing: false,
+
+      timezone: '',
+
+      /**
+       * The `displayMode` attribute determine the kind of clock to display.
+       *
+       * @attribute displayMode
+       * @type string
+       * @default clock
+       * @options clock, countdown, timer
+       */
+      displayMode: 'clock',
+
+      /**
+       * Display start/stop and reset buttons
+       *
+       * @attribute commandButtons
+       * @type bool
+       */
+      commandButtons: false,
+
+      /**
+       * Show or hide seconds
+       *
+       * @attribute showSeconds
+       * @type bool
+       * @default true
+       */
+      showSeconds: true,
+
+      /**
+       * Set the minutes to start from for the countdown mode
+       *
+       * @attribute startFrom
+       * @type int
+       * @default null
+       */
+      startFrom: null,
+
+      /**
+       * String containing the digits displayed in the flip clock
+       *
+       * @attribute time
+       * @type string
+       * @default '000000'
+       */
+      time: '000000',
+
+      /**
+       * Set the hours, minutes and seconds in the timer
+       *
+       * @attribute timer
+       * @type string
+       */
+      timer: null,
+
+      /**
+       * Auto start timer and/or countdown
+       *
+       * @attribute auto
+       * @type bool
+       */
+      auto: false,
+
+      /**
+       * Track if the timer (or the countdown) is running or not
+       *
+       * @attribute isRunning
+       * @type bool
+       */
+      isRunning: false,
+
+      /**
+       * The `createClock` method start a clock that display the current time.
+       *
+       * @method createClock
+       */
+      createClock: function() {
+        if(this.timezone.length > 0){
+          this.time = moment().tz(this.timezone).format('HHmmss');
+        } else {
+          this.time = moment().format('HHmmss');
+        }
+        this.async(this.createClock, null, 1000);
+      },
+
+      /**
+       * The `createTimer` method create a timer
+       *
+       * @method createTimer
+       */
+      createTimer: function() {
+        if(this.isRunning) {
+          this.time = this.timer.add('s', 1).format('HHmmss');
+          this.async(this.createTimer, null, 1000);
+        }
+      },
+
+      /**
+       * The `createCountdown` method create a countdown
+       *
+       * @method createCountdown
+       */
+      createCountdown: function() {
+        if(this.isRunning) {
+          if(this.time > 0) {
+            this.time = this.timer.subtract('s', 1).format('HHmmss');
+            this.async(this.createCountdown, null, 1000);
+          }
+        }
+      },
+
+      startStop: function(){
+        if(this.isRunning) {
+          this.stopCount();
+        }else {
+          this.startCount();
+        }
+        this.$.alarm.pause();
+      },
+
+      editCountdown: function(){
+        if(this.isEditing){
+          this.isEditing = false;
+        }else {
+          this.isEditing = true;
+        }
+      },
+
+      /**
+       * The `startCount` method does no work at this time.
+       *
+       * @method startCount
+       */
+      startCount: function() {
+        if(!this.timer) {
+          this.timer = moment().hours(this.counthour).minutes(this.countminute).seconds(this.countsecond);
+        }
+        this.isRunning = true;
+        this.startFrom ? this.createCountdown() : this.createTimer();
+      },
+
+      countdownChanged: function() {
+        this.time = this.countdown;
+      },
+
+      /**
+       * The `stopCount` stop the running timer or countdown
+       *
+       * @method stopCount
+       */
+      stopCount: function() {
+        this.isRunning = false;
+      },
+
+      /**
+       * The `resetCount` reset che counter
+       *
+       * @method resetCount
+       */
+      resetCount: function() {
+        this.isRunning = false;
+        this.time = this.startFrom ? '00' + this.startFrom + '00' : '000000';
+        this.timer = null;
+        this.countminute = '00';
+        this.counthour = '00';
+        this.countsecond = '00';
+      },
+      created: function() {
+        this.resetCount();
+      },
+      timeChanged: function() {
+        // Play the alarm sound
+        if(this.displayMode == 'countdown' && this.isRunning == true) {
+          if(this.time == '000000'){
+            this.$.alarm.play();
+          }
+        }
+      },
+      ready: function() {
+        switch(this.displayMode) {
+          case 'timer':
+            if(this.auto === true) {
+              this.startCount();
+            }
+            break;
+          case 'countdown':
+            if(this.auto === true) {
+              this.createCountdown();
+            }
+            break;
+          default:
+            this.createClock();
+        }
+        if(this.startFrom) {
+          this.time = '00' + this.startFrom + '00';
+        }
+      }
+    });
+
+  </script>
+
+</polymer-element>

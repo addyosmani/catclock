@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html manifest="manifest.appcache">
+
+<head>
+  <meta charset="UTF-8">
+<!--
+Copyright (c) 2014 Google. All rights reserved.
+
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cat Clock</title>
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="shortcut icon" sizes="196x196" href="icons/chrome-touch-icon-196x196.png">
+  <link rel="icon" sizes="196x196" href="icons/chrome-touch-icon-196x196.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Cat Clock">
+  <link rel="apple-touch-icon-precomposed" href="icons/ms-touch-icon-144x144-precomposed.png">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="icons/ms-touch-icon-144x144-precomposed.png">
+  <meta name="msapplication-TileColor" content="#9C27B0">
+
+
+  <script src="components/platform/platform.js"></script>
+  <link rel="stylesheet" href="styles.css" shim-shadowdom/>
+  <link rel="import" href="world-clock.html">
+  <link rel="import" href="components/core-icons/core-icons.html">
+  <link rel="import" href="fonts/roboto.html">
+  <link rel="import" href="components/core-toolbar/core-toolbar.html">
+  <link rel="import" href="components/core-animated-pages/core-animated-pages.html">
+  <link rel="import" href="components/paper-tabs/paper-tabs.html">
+  <link rel="import" href="components/paper-dialog/paper-dialog.html">
+  <link rel="import" href="components/paper-dialog/paper-dialog-transition.html">
+  <link rel="import" href="components/paper-button/paper-button.html">
+  <link rel="import" href="components/core-animated-pages/transitions/slide-from-bottom.html">
+  <link rel="import" href="random-cat.html">
+
+</head>
+
+<body unresolved>
+
+  <paper-tabs selected="0" style="background:#9C27B0">
+    <paper-tab id="clockTab">Clock</paper-tab>
+    <paper-tab id="timerTab">Timer</paper-tab>
+    <paper-tab id="countdownTab">Countdown</paper-tab>
+  </paper-tabs>
+
+  <!-- PR https://github.com/Polymer/core-animated-pages/pull/15 -->
+  <core-animated-pages id="animatedPages" transitions="slide-from-bottom">
+    <section>
+      <div layout vertical center center-justified style="background:#E61875">
+        <div class="tile">
+          <world-clock></world-clock>
+          <template is="auto-binding" id="timezones">
+           <random-cat class="{{timezones.length > 0 ? 'smallcat':''}}"></random-cat>
+          <template repeat="{{tz in timezones}}">
+            <world-clock class="timezoneClock" timezone="{{tz}}"></world-clock>
+          </template>
+          </template>
+          <paper-fab icon="add" id="add" on-click="{{startStop}}"></paper-fab>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div layout vertical center center-justified style="background:#0191A5">
+        <world-clock displayMode="timer" commandButtons="true"></world-clock>
+        <random-cat></random-cat>
+      </div>
+    </section>
+    <section>
+      <div layout vertical center center-justified style="background:#F9B24F;">
+        <div>
+          <world-clock displayMode="countdown" startFrom="20" commandButtons="true"></world-clock>
+          <random-cat></random-cat>
+        </div>
+      </div>
+    </section>
+  </core-animated-pages>
+
+  <audio src="audio/meow_tick.mp3" autoplay></audio>
+
+<!--
+The dialog allows a user to select which timezone they would like to add
+to the main screen. Timezones are 'enabled' via Moment.js's timzeone add-on
+in world-clock. In this view they are populated by adding an entry to the
+aliased name for a timezone to the `timezones` array.
+-->
+<paper-dialog id="dialog" heading="Add Timezone" transition="paper-dialog-transition-center">
+    <select id="selectTimezone">
+      <option selected>Choose a timezone...</option>
+      <option value="America/Los_Angeles">Pacific Standard Time</option>
+      <option value="America/New_York">Eastern Standard Time</option>
+    </select>
+    <paper-button label="Cancel" affirmative></paper-button>
+    <paper-button id="addClock" label="Add Clock" affirmative autofocus></paper-button>
+ </paper-dialog>
+
+
+  <script>
+  ;(function(){
+
+    var querySelector = document.querySelector.bind(document);
+    var clockTab = querySelector("#clockTab");
+    var timerTab = querySelector("#timerTab");
+    var countdownTab = querySelector("#countdownTab");
+    var dialog = querySelector("#dialog");
+    var tzTmpl = querySelector("#timezones");
+    var selectTz = querySelector("#selectTimezone");
+    var addBtn = querySelector("#add");
+    var addClockBtn = querySelector("#addClock");
+    var animatedPages = document.getElementById('animatedPages');
+    var timezones = [];
+
+    document.addEventListener('polymer-ready', function(){
+      tzTmpl.timezones = timezones;
+    });
+
+    addBtn.addEventListener('click', function(){
+       dialog.toggle();
+    });
+
+    addClockBtn.addEventListener('click', function(){
+      var selectedOption = selectTz.options[selectTz.selectedIndex].value;
+       addTimezone(selectedOption);
+    });
+
+    function addTimezone(tz){
+      if (tz !== 'Choose a timezone...') {
+        timezones.push(tz);
+      }
+    }
+
+    // Update core-animated-pages to a specific page
+    function navigate(page) {
+      var p = animatedPages;
+      p.selected = page;
+    }
+
+    // Add a new timezone to the list
+    clockTab.addEventListener('click', function(){
+      navigate(0);
+    });
+
+    timerTab.addEventListener('click', function(){
+      navigate(1);
+    });
+
+    countdownTab.addEventListener('click', function(){
+      navigate(2);
+    });
+
+  })();
+  </script>
+</body>
+
+</html>

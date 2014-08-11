@@ -1,0 +1,115 @@
+body {
+  font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+  margin: 0;
+}
+core-animated-pages {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  font-size: 72px;
+  overflow: hidden;
+}
+section > div {
+  height: 100%;
+  color: white;
+}
+paper-tabs,
+core-toolbar {
+  background-color: #00bcd4;
+  color: #fff;
+  box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.2);
+}
+core-toolbar paper-tabs {
+  box-shadow: none;
+}
+paper-tabs[noink][nobar] paper-tab.core-selected {
+  color: #ffff8d;
+}
+paper-tabs.transparent-teal {
+  background-color: transparent;
+  color: #00bcd4;
+  box-shadow: none;
+}
+paper-tabs.transparent-teal::shadow #selectionBar {
+  background-color: #00bcd4;
+}
+paper-tabs.transparent-teal paper-tab::shadow #ink {
+  color: #00bcd4;
+}
+paper-button {
+  margin: 1em;
+  width: 10em;
+}
+body[unresolved] {
+  background-color: #0191A5;
+  fill: #0191A5;
+  background-size: 300px;
+  background-position: 50% -50%;
+  background-image: url('icons/splash.png');
+  background-repeat: no-repeat;
+}
+random-cat {
+  bottom:0px;
+}
+.tile {
+  text-align: center;
+}
+
+paper-fab {
+  background: #EDFE44;
+  position: absolute;
+  bottom: 0px;
+  right: 0;
+  margin: 30px;
+}
+paper-fab #icon, paper-fab /deep/ #icon {
+  fill: black;
+  color: black;
+}
+
+paper-dialog {
+  width: 50%;
+  min-width: 340px;
+}
+
+.smallcat /deep/ img{ width: 20vw; }
+
+.timezoneClock /deep/ span, .timezoneClock /deep/ b {
+  font-size: 10.9vh;
+  color: #AD1457;
+}
+
+/* For desktops and tablets */
+@media screen and (min-width:700px) {
+
+  .smallcat /deep/ img{ width: 10vw; }
+
+  world-clock /deep/ #clock span, world-clock /deep/ #clock b {
+    font-size: 13.9vh;
+  }
+
+  .timezoneClock /deep/ #clock span, .timezoneClock /deep/ #clock b {
+    font-size: 5.9vh;
+  }
+
+  world-clock /deep/ #clock .timezone {
+    font-size: 6vh;
+  }
+
+}
+
+@media screen and (min-width:900px) {
+
+  .timezoneClock /deep/ #clock span, .timezoneClock /deep/ #clock b {
+    font-size: 40px;
+    font-size: 5.9vh;
+  }
+
+  world-clock /deep/ #clock .timezone {
+    font-size: 30px;
+    font-size: 5vh;
+  }
+
+}
